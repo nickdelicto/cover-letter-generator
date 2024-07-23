@@ -28,6 +28,10 @@ mongoose.connect(process.env.MONGODB_URI, {
 });
 
 
+// Middleware to parse JSON request bodies
+app.use(express.json());
+
+
 // Session setup
 app.use(session({
     secret: process.env.SESSION_SECRET, // Using session secret from .env
@@ -98,7 +102,7 @@ app.post('/auth/email', async (req, res) => {
     await Token.create({email, token, expires: Date.now() + 3600000}); // 1 hour expiration
 
     const mailOptions = {
-        from: process.env.EMAIL,
+        from: process.env.SMTP_USER,
         to: email,
         subject: 'Login Link',
         text: `Click the following link to login: http://localhost:5000/auth/email/${token}`
