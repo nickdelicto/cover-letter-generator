@@ -4,6 +4,10 @@ const dotenv = require('dotenv'); // Import dotenv to manage environment variabl
 const passport = require('passport'); // Import Passport for authentication
 const GoogleStrategy = require('passport-google-oauth20').Strategy; // Import the Google OAuth strategy
 const session = require('express-session'); // Import express-session for session management
+const crypto = require('crypto'); // Import the built-in crypto module
+const nodemailer = require('nodemailer'); // Import nodemailer for sending emails
+const Token = require('./models/Token'); // Import the Token model
+
 
 // Load environment variables from .env file
 dotenv.config();
@@ -71,7 +75,62 @@ app.get('/auth/google/callback',
         res.redirect('/');
     });
 
-// Define a route for the root url that sends a simple response
+
+// Email transport configuration using Brevo SMTP
+const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: process.env.SMTP_PORT,
+    secure: false, // true for 465, false for other ports
+    auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+    }
+});
+
+
+
+// Route to request login link
+app.post('/auth/email', async (req, res) => {
+    const email = req.body.email;
+    const token = crypto.randomBytes(20).toString('hex');
+
+    // Store token in my database with the email
+    await Token.create({email, token, expires: Date.now() + 3600000}); // 1 hour expiration
+
+    const mailOptions = {
+        from: process.env.EMAIL,
+        to: email,
+        subject: 'Login Link',
+        text: `Click the following link to login: http://localhost:5000/auth/email/${token}`
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+            return res.status(500).send(error.toString());
+        }
+        res.status(200).send('Login link sent!');
+    });
+});
+
+
+
+// Route to verify login link
+app.get('/auth/email/:token', async (req, res) => {
+    const token = req.params.token;
+    const tokenRecord = await Token.findOne({token});
+
+    if (!tokenRecord || tokenRecord.expires < Date.now()) {
+        return res.status(400).send('Token is invalid or expired!');
+    }
+
+    // Here I would log the user in and create a session
+    req.session.user = {email: tokenRecord.email};
+    res.redirect('/');
+});
+
+
+
+    // Define a route for the root url that sends a simple response
 app.get('/', (req, res) => {
     res.send('Server is up and running');
 });
