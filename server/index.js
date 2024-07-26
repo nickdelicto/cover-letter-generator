@@ -7,7 +7,7 @@ const session = require('express-session'); // Import express-session for sessio
 const crypto = require('crypto'); // Import the built-in crypto module
 const nodemailer = require('nodemailer'); // Import nodemailer for sending emails
 const Token = require('./models/Token'); // Import the Token model
-
+const multer = require('multer'); // Import Multer for file upload functionality
 
 // Load environment variables from .env file
 dotenv.config();
@@ -160,6 +160,33 @@ app.post('/logout', (req, res) => {
 app.get('/', (req, res) => {
     res.send('Server is up and running');
 });
+
+
+
+// Set up storage for multer
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/');
+    },
+    filename: (req, file, cb) => {
+        cb(null, `${Date.now()} - ${file.originalname}`);
+    }
+});
+
+
+const upload = multer({storage: storage});
+
+
+// File upload endpoint
+app.post('/upload', upload.single('resume'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).send('No file uploaded');
+    }
+    res.status(200).send(`File uploaded successfully: ${req.file.path}`);
+});
+
+
+
 
 //Start the Express server and listen on the specified port
 app.listen(PORT, () => {
