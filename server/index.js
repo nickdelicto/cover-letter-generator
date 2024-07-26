@@ -134,6 +134,28 @@ app.get('/auth/email/:token', async (req, res) => {
 
 
 
+// Route to verify if user session is active
+app.get('/session', (req, res) => {
+    if (req.session.user) {
+        res.status(200).send(`User is logged in as ${req.session.user.email}`);
+    } else {
+        res.status(401).send('User is not logged in');
+    }
+});
+
+
+
+// Route to log out user by destroying session
+app.post('/logout', (req, res) => {
+    req.session.destroy((err) => {
+        if (err) {
+            return res.status(500).send('Failed to logout');
+        }
+        res.status(200).send('Logged out successfully');
+    });
+});
+
+
     // Define a route for the root url that sends a simple response
 app.get('/', (req, res) => {
     res.send('Server is up and running');
