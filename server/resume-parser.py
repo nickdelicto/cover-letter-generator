@@ -1,3 +1,7 @@
+import nltk
+nltk.download('stopwords')
+
+
 import sys
 import json
 from pyresparser import ResumeParser

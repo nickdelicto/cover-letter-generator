@@ -189,7 +189,7 @@ app.post('/upload', upload.single('resume'), (req, res) => {
     const filePath = req.file.path;
 
     // Execute the python script with the uploaded file path
-    exec(`python3 resume_parser.py ${filePath}`, (error, stdout, stderr) => {
+    exec(`python3 resume-parser.py ${filePath}`, (error, stdout, stderr) => {
         if (error) {
             console.error(`exec error: ${error}`);
             return res.status(500).send('Error processing file');
