@@ -8,6 +8,9 @@ const crypto = require('crypto'); // Import the built-in crypto module
 const nodemailer = require('nodemailer'); // Import nodemailer for sending emails
 const Token = require('./models/Token'); // Import the Token model
 const multer = require('multer'); // Import Multer for file upload functionality
+const {exec} = require('child_process'); // Import child_process to execute Python script
+const { stderr } = require('process');
+
 
 // Load environment variables from .env file
 dotenv.config();
@@ -182,7 +185,20 @@ app.post('/upload', upload.single('resume'), (req, res) => {
     if (!req.file) {
         return res.status(400).send('No file uploaded');
     }
-    res.status(200).send(`File uploaded successfully: ${req.file.path}`);
+
+    const filePath = req.file.path;
+
+    // Execute the python script with the uploaded file path
+    exec(`python3 resume_parser.py ${filePath}`, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`exec error: ${error}`);
+            return res.status(500).send('Error processing file');
+        }
+
+        console.log(`stdout: ${stdout}`);
+        console.error(`stderr: ${stderr}`);
+        res.status(200).send(`File uploaded and processed successfully: ${filePath}`);
+    });
 });
 
 
