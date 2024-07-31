@@ -3,3 +3,6 @@
 
 # Python virtual enivironment
 myenv/
+
+# Ignore Uploads
+uploads/
